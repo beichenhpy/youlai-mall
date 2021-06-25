@@ -50,13 +50,13 @@ public class RechargeController {
 
     @ApiOperation(value = "账户余额充值订单")
     @PostMapping
-    public Result recharge(@RequestBody RechargeDTO rechargeDTO) {
+    public Result<?> recharge(@RequestBody RechargeDTO rechargeDTO) {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         headers.set("Payment-Key", appKey);
         headers.set("Payment-Secret", appSecret);
 
-        HttpEntity<Map> httpEntity = new HttpEntity<>(null, headers);
+        HttpEntity<Map<?,?>> httpEntity = new HttpEntity<>(null, headers);
         String url = createOrderURL + "?price=" + rechargeDTO.getPrice() + "&name=" + rechargeDTO.getName() + "&thirduid=" + rechargeDTO.getThirduid();
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, httpEntity, String.class);
@@ -64,7 +64,7 @@ public class RechargeController {
         if (statusCode == HttpStatus.SC_OK) {
             String responseBody = responseEntity.getBody();
             JSONObject jsonObject = JSONUtil.parseObj(responseBody);
-            if (jsonObject.getStr("code").equals("10001")) {
+            if ("10001".equals(jsonObject.getStr("code"))) {
                 Map<String, Object> resultMap = new HashMap<>();
                 resultMap.put("name", jsonObject.getStr("name"));
                 resultMap.put("price", jsonObject.getStr("price"));
@@ -84,6 +84,7 @@ public class RechargeController {
     @ResponseBody
     @GetMapping("/{id}")
     public Object findOrderState(@PathVariable String id) {
+        //todo 写的有问题，header没用上啊？
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         headers.set("Payment-Key", appKey);
@@ -115,7 +116,7 @@ public class RechargeController {
         String thirduid = resultPay.getThirduid();
         UmsMember user = iUmsMemberService.getById(thirduid);
         if (user != null) {
-            user.setBalance((long) (user.getBalance() + Float.valueOf(resultPay.getPrice()) * 100 * 10000));
+            user.setBalance((long) (user.getBalance() + Float.parseFloat(resultPay.getPrice()) * 100 * 10000));
         }
         iUmsMemberService.updateById(user);
     }
