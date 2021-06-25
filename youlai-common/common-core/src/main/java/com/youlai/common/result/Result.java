@@ -8,9 +8,9 @@ import java.io.Serializable;
 /**
  * @author haoxr
  * @date 2020-06-23
+ * @see JsonInclude.Include#NON_NULL 忽略null值
  **/
 @Data
-// 忽略null值
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Result<T> implements Serializable {
 
@@ -36,7 +36,7 @@ public class Result<T> implements Serializable {
 
 
     public static <T> Result<T> success(T data, Long total) {
-        Result<T> result = new Result();
+        Result<T> result = new Result<>();
         result.setCode(ResultCode.SUCCESS.getCode());
         result.setMsg(ResultCode.SUCCESS.getMsg());
         result.setData(data);
@@ -69,7 +69,7 @@ public class Result<T> implements Serializable {
     }
 
     private static <T> Result<T> result(String code, String msg, T data) {
-        Result<T> result = new Result<T>();
+        Result<T> result = new Result<>();
         result.setCode(code);
         result.setData(data);
         result.setMsg(msg);
@@ -77,10 +77,7 @@ public class Result<T> implements Serializable {
     }
 
 
-    public static boolean isSuccess(Result result) {
-        if(result!=null&&ResultCode.SUCCESS.getCode().equals(result.getCode())){
-            return true;
-        }
-        return false;
+    public static boolean isSuccess(Result<?> result) {
+        return result != null && ResultCode.SUCCESS.getCode().equals(result.getCode());
     }
 }
