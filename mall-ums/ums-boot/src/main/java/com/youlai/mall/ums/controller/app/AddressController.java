@@ -30,11 +30,11 @@ public class AddressController {
 
     @ApiOperation(value = "获取登录会员的地址列表")
     @GetMapping
-    public Result list() {
+    @SuppressWarnings("unchecked")
+    public Result<List<UmsAddress>> list() {
         Long memberId = JwtUtils.getUserId();
         List<UmsAddress> addressList = iUmsAddressService.list(new LambdaQueryWrapper<UmsAddress>()
-                .eq(UmsAddress::getMemberId, memberId)
-                .orderByDesc(UmsAddress::getDefaulted));
+                .eq(UmsAddress::getMemberId, memberId).orderByDesc(UmsAddress::getDefaulted));
         return Result.success(addressList);
     }
 
@@ -42,10 +42,11 @@ public class AddressController {
     @ApiOperation(value = "新增地址")
     @ApiImplicitParam(name = "address", value = "实体JSON对象", required = true, paramType = "body", dataType = "UmsAddress")
     @PostMapping
-    public Result add(@RequestBody UmsAddress address) {
+    public Result<Void> add(@RequestBody UmsAddress address) {
         Long memberId = JwtUtils.getUserId();
         address.setMemberId(memberId);
-        if (ADDRESS_DEFAULTED.equals(address.getDefaulted())) { // 修改其他默认地址为非默认
+        // 修改其他默认地址为非默认
+        if (ADDRESS_DEFAULTED.equals(address.getDefaulted())) {
             iUmsAddressService.update(new LambdaUpdateWrapper<UmsAddress>()
                     .eq(UmsAddress::getMemberId, memberId)
                     .eq(UmsAddress::getDefaulted, 1)
@@ -63,11 +64,12 @@ public class AddressController {
             @ApiImplicitParam(name = "address", value = "实体JSON对象", required = true, paramType = "body", dataType = "UmsAddress")
     })
     @PutMapping(value = "/{id}")
-    public Result update(
+    public Result<Void> update(
             @PathVariable Long id,
             @RequestBody UmsAddress address) {
         Long memberId = JwtUtils.getUserId();
-        if (address.getDefaulted().equals(1)) { // 修改其他默认地址为非默认
+        // 修改其他默认地址为非默认
+        if (address.getDefaulted().equals(1)) {
             iUmsAddressService.update(new LambdaUpdateWrapper<UmsAddress>()
                     .eq(UmsAddress::getMemberId, memberId)
                     .eq(UmsAddress::getDefaulted, 1)
@@ -81,7 +83,7 @@ public class AddressController {
     @ApiOperation(value = "删除地址")
     @ApiImplicitParam(name = "ids", value = "id集合字符串，英文逗号分隔", required = true, paramType = "query", dataType = "String")
     @DeleteMapping("/{ids}")
-    public Result delete(@PathVariable String ids) {
+    public Result<Void> delete(@PathVariable String ids) {
         boolean status = iUmsAddressService.removeByIds(Arrays.asList(ids.split(",")));
         return Result.judge(status);
     }
@@ -93,14 +95,14 @@ public class AddressController {
             @ApiImplicitParam(name = "address", value = "实体JSON对象", required = true, paramType = "body", dataType = "UmsAddress")
     })
     @PatchMapping(value = "/{id}")
-    public Result patch(@PathVariable Long id, @RequestBody UmsAddress address) {
+    public Result<Void> patch(@PathVariable Long id, @RequestBody UmsAddress address) {
         Long userId = JwtUtils.getUserId();
         LambdaUpdateWrapper<UmsAddress> updateWrapper = new LambdaUpdateWrapper<UmsAddress>()
                 .eq(UmsAddress::getMemberId, userId);
         if (address.getDefaulted() != null) {
             updateWrapper.set(UmsAddress::getDefaulted, address.getDefaulted());
-
-            if (address.getDefaulted().equals(1)) { // 修改其他默认地址为非默认
+            // 修改其他默认地址为非默认
+            if (address.getDefaulted().equals(1)) {
                 iUmsAddressService.update(new LambdaUpdateWrapper<UmsAddress>()
                         .eq(UmsAddress::getMemberId, userId)
                         .eq(UmsAddress::getDefaulted, 1)
